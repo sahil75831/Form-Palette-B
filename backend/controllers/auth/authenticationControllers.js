@@ -61,7 +61,7 @@ const loginUser = async (req, res) => {
           "password",
           "createdAt",
           "updatedAt",
-          "id",
+          
         ]),
       });
     } else {
