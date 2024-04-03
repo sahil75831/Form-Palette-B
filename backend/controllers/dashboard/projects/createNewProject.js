@@ -1,4 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+import asyncHandler from "express-async-handler";
+
 const db = new PrismaClient();
 import {
   S3Client,
@@ -16,21 +18,17 @@ const s3Client = new S3Client({
   },
 });
 
-
 async function getObj(key) {
   const command = new GetObjectCommand({
     Bucket: process.env.S3_BUCKET_NAME,
     Key: key,
   });
   const url = await getSignedUrl(s3Client, command);
-  console.log("url :: ", url)
+  console.log("url :: ", url);
   return url;
 }
 
-
-const createNewProject = async (req, res) => {
-  console.log("createNewProject controller hit.");
-  console.log("req.body : ", req.body);
+const createNewProject = asyncHandler(async (req, res) => {
   const {
     fileName_UUID,
     userId,
@@ -38,31 +36,36 @@ const createNewProject = async (req, res) => {
     description,
     startDate,
     endDate,
-    visibility,
+    visiblity,
   } = req.body;
 
   if (
-    
+    fileName_UUID &&
     userId &&
     title &&
     description &&
     startDate &&
     endDate &&
-    visibility
+    visiblity
   ) {
+    console.log("hello world");
 
-    // const newProject = await db.project.create({
-    //   data: {
-    //     userId,
-    //     title,
-    //     description,
-    //     startDate,
-    //     endDate,
-    //     visibility,
-    //   },
-    // });
-    // console.log("newProjet : ", newProject)
+    const brandImageUrl = await getObj(`uploads/brandImages/${fileName_UUID}`);
+
+    // await db.project.deleteMany()
+    const newProject = await db.project.create({
+      data: {
+        userId,
+        brandImageUrl: `${brandImageUrl}`,
+        title,
+        description,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        visiblity: visiblity === "public" ? true : false,
+      },
+    });
+    console.log("newProjet : ", newProject);
   }
-  res.status(201).json({ mesage: "done" });
-};
+  res.status(201).json({ mesage: "project created succesfully" });
+});
 export { createNewProject };

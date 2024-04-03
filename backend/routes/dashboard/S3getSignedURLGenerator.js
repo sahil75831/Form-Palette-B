@@ -1,6 +1,6 @@
 import express from "express";
 import { v4 as uuidv4 } from "uuid";
-const createSignedURL = express.Router();
+// const createSignedURL = express.Router();
 
 import {
   S3Client,
@@ -21,25 +21,32 @@ const s3Client = new S3Client({
 async function putObj(fileName, contentType) {
   console.log("put obj hit");
 
-  console.log("file name ::: ", fileName)
+  console.log("file name ::: ", fileName);
   const command = new PutObjectCommand({
     Bucket: process.env.S3_BUCKET_NAME,
     Key: `uploads/brandImages/${fileName}`,
     ContentType: contentType,
   });
-  const url = await getSignedUrl(s3Client, command);
+  const url = await getSignedUrl(s3Client, command, { expiresIn: 60 });
 
   return url;
 }
 
 const throwSignedURL = async (req, res) => {
-
   console.log("put obj hit : ");
   console.log("put obj hit : ", req.body);
 
   const fileName = req.body.fileName;
-  const signed_url = await putObj(fileName, "image/jpg");
 
-  res.json({ signed_url });
+  const parts = fileName.split(".");
+  const fileExtension = parts.pop();
+  const initialPart = parts.join(".");
+  const uuidString = uuidv4();
+  const newFileName = `${initialPart}__${uuidString}.${fileExtension}`;
+
+  const signed_url = await putObj(newFileName, "image/jpg");
+
+  res.json({ signed_url, newFileName });
 };
 export { throwSignedURL };
+
