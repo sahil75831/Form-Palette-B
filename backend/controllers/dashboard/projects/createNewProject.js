@@ -50,7 +50,7 @@ const createNewProject = asyncHandler(async (req, res) => {
   ) {
     console.log("hello world");
 
-    const brandImageUrl = await getObj(`uploads/brandImages/${fileName_UUID}`);
+    const brandImageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.S3_BUCKET_REGION}.amazonaws.com/uploads/brandImages/${fileName_UUID}`;
 
     // await db.project.deleteMany()
     const newProject = await db.project.create({
